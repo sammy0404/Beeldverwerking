@@ -7,3 +7,11 @@ D:\Shared\Image Processing\assignment\INFOIBV\obj\x86\Release\GenerateResource.r
 D:\Shared\Image Processing\assignment\INFOIBV\obj\x86\Release\GenerateResource.write.1.tlog
 D:\Shared\Image Processing\assignment\INFOIBV\obj\x86\Release\INFOIBV.exe
 D:\Shared\Image Processing\assignment\INFOIBV\obj\x86\Release\INFOIBV.pdb
+C:\Users\Gebruiker\Documents\GitHub\Beeldverwerking\bin\Release\INFOIBV.exe
+C:\Users\Gebruiker\Documents\GitHub\Beeldverwerking\bin\Release\INFOIBV.pdb
+C:\Users\Gebruiker\Documents\GitHub\Beeldverwerking\obj\x86\Release\INFOIBV.csprojResolveAssemblyReference.cache
+C:\Users\Gebruiker\Documents\GitHub\Beeldverwerking\obj\x86\Release\INFOIBV.INFOIBV.resources
+C:\Users\Gebruiker\Documents\GitHub\Beeldverwerking\obj\x86\Release\INFOIBV.Properties.Resources.resources
+C:\Users\Gebruiker\Documents\GitHub\Beeldverwerking\obj\x86\Release\INFOIBV.csproj.GenerateResource.Cache
+C:\Users\Gebruiker\Documents\GitHub\Beeldverwerking\obj\x86\Release\INFOIBV.exe
+C:\Users\Gebruiker\Documents\GitHub\Beeldverwerking\obj\x86\Release\INFOIBV.pdb
