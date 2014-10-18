@@ -46,7 +46,7 @@ namespace INFOIBV
             // Setup progress bar
             progressBar.Visible = true;
             progressBar.Minimum = 1;
-            progressBar.Maximum = InputImage.Size.Width * InputImage.Size.Height;
+            progressBar.Maximum = InputImage.Size.Width * InputImage.Size.Height *45;
             progressBar.Value = 1;
             progressBar.Step = 1;
 
@@ -61,27 +61,34 @@ namespace INFOIBV
 
             //==========================================================================================
             // TODO: include here your own code
-            // example: create a negative image
-            for (int x = 0; x < InputImage.Size.Width; x++)
-            {
-                for (int y = 0; y < InputImage.Size.Height; y++)
-                {
-                    Color pixelColor = Image[x, y];                         // Get the pixel color at coordinate (x,y)
-                    Color updatedColor = Color.FromArgb(255 - pixelColor.R, 255 - pixelColor.G, 255 - pixelColor.B); // Negative image
-                    Image[x, y] = updatedColor;                             // Set the new pixel color at coordinate (x,y)
-                    progressBar.PerformStep();                              // Increment progress bar
-                }
-            }
-            //==========================================================================================
+            int[,] imageValues = ToGrayscale(Image);
+            int[,] dilation = Dilation(imageValues);
+            int[,] erosion = Erosion(imageValues);
 
-            // Copy array to output Bitmap
-            for (int x = 0; x < InputImage.Size.Width; x++)
+            imageValues = SubtractImage(dilation, erosion);
+            imageValues = Threshold(imageValues, 25);
+
+            
+                imageValues = Erosion(imageValues);
+            imageValues = Dilation(imageValues);
+            
+            int n = 1;
+            for (int i = 0; i < n;i++ )
             {
-                for (int y = 0; y < InputImage.Size.Height; y++)
-                {
-                    OutputImage.SetPixel(x, y, Image[x, y]);               // Set the pixel color at coordinate (x,y)
-                }
+                imageValues = Dilation(imageValues);
+                imageValues = Erosion(imageValues);
             }
+                //==========================================================================================
+
+                // Copy array to output Bitmap
+                for (int x = 0; x < InputImage.Size.Width; x++)
+                {
+                    for (int y = 0; y < InputImage.Size.Height; y++)
+                    {
+                        int grayValue = imageValues[x, y];
+                        OutputImage.SetPixel(x, y, Color.FromArgb(grayValue, grayValue, grayValue));               // Set the pixel color at coordinate (x,y)
+                    }
+                }
             
             pictureBox2.Image = (Image)OutputImage;                         // Display output image
             progressBar.Visible = false;                                    // Hide progress bar
@@ -94,5 +101,124 @@ namespace INFOIBV
                 OutputImage.Save(saveImageDialog.FileName);                 // Save the output image
         }
 
+        private int[,] ToGrayscale(Color[,] image)
+        {
+            int[,] values = new int[image.GetLength(0), image.GetLength(1)];
+            for (int x = 0; x < InputImage.Size.Width; x++)
+            {
+                for (int y = 0; y < InputImage.Size.Height; y++)
+                {
+                    Color pixelColor = image[x, y];                              // Get the pixel color at coordinate (x,y)
+                    values[x,y] = (int)(0.2126 * pixelColor.R + 0.7152 * pixelColor.G + 0.0722 * pixelColor.B);
+                    progressBar.PerformStep();                                   // Increment progress bar
+                }
+            }
+            return values;
+        }
+
+        private int[,] Dilation(int[,] image)
+        {
+            int[,] newImage = new int[image.GetLength(0), image.GetLength(1)];
+
+            for (int x = 0; x < InputImage.Size.Width; x++)
+            {
+                for (int y = 0; y < InputImage.Size.Height; y++)
+                {
+                    List<int> values = new List<int>();
+
+                    values.Add(image[x, y]);                              // Get the pixel color at coordinate (x,y)
+
+                    if (y + 1 < image.GetLength(1))
+                        values.Add(image[x, y + 1]);
+                    if (y - 1 >= 0)
+                        values.Add(image[x, y - 1]);
+                    if (x + 1 < image.GetLength(0))
+                        values.Add(image[x + 1, y]);
+                    if (x - 1 >= 0)
+                        values.Add(image[x - 1, y]);
+
+                    if (x - 1 >= 0 && y - 1 >= 0)
+                        values.Add(image[x - 1, y - 1]);
+                    if (x - 1 >= 0 && y + 1 < image.GetLength(1))
+                        values.Add(image[x - 1, y + 1]);
+                    if (x + 1 < image.GetLength(0) && y + 1 < image.GetLength(1))
+                        values.Add(image[x + 1, y + 1]);
+                    if (x + 1 < image.GetLength(0) && y - 1 >= 0)
+                        values.Add(image[x + 1, y - 1]);
+                    
+                    newImage[x,y] = values.Max();
+                    progressBar.PerformStep();
+                }
+            }
+            return newImage;
+        }
+
+        private int[,] Erosion(int[,] image)
+        {
+            int[,] newImage = new int[image.GetLength(0), image.GetLength(1)];
+
+            for (int x = 0; x < InputImage.Size.Width; x++)
+            {
+                for (int y = 0; y < InputImage.Size.Height; y++)
+                {
+                    List<int> values = new List<int>();
+
+                    values.Add(image[x, y]);                              // Get the pixel color at coordinate (x,y)
+
+                    if (y + 1 < image.GetLength(1))
+                        values.Add(image[x, y + 1]);
+                    if (y - 1 >= 0)
+                        values.Add(image[x, y - 1]);
+                    if (x + 1 < image.GetLength(0))
+                        values.Add(image[x + 1, y]);
+                    if (x - 1 >= 0)
+                        values.Add(image[x - 1, y]);
+
+                    if (x - 1 >= 0 && y - 1 >= 0)
+                        values.Add(image[x - 1, y - 1]);
+                    if (x - 1 >= 0 && y + 1 < image.GetLength(1))
+                        values.Add(image[x - 1, y + 1]);
+                    if (x + 1 < image.GetLength(0) && y + 1 < image.GetLength(1))
+                        values.Add(image[x + 1, y + 1]);
+                    if (x + 1 < image.GetLength(0) && y - 1 >= 0)
+                        values.Add(image[x + 1, y - 1]);
+
+                    newImage[x, y] = values.Min();
+                    progressBar.PerformStep();
+                }
+            }
+            return newImage;
+        }
+
+        private int[,] SubtractImage(int[,] image1, int[,] image2)
+        {
+            int[,] newImage = new int[image1.GetLength(0), image1.GetLength(1)];
+
+            for (int x = 0; x < InputImage.Size.Width; x++)
+            {
+                for (int y = 0; y < InputImage.Size.Height; y++)
+                {
+                    newImage[x, y] = image1[x, y] - image2[x,y];
+                    progressBar.PerformStep();
+                }
+            }
+            return newImage;
+        }
+
+        private int[,] Threshold(int[,] image, int thresholdValue)
+        {
+            for (int x = 0; x < InputImage.Size.Width; x++)
+            {
+                for (int y = 0; y < InputImage.Size.Height; y++)
+                {
+                    if(image[x,y] < thresholdValue)
+                        image[x,y] = 0;
+                    else
+                        image[x,y] = 255;
+                    progressBar.PerformStep();
+                }
+            }
+            return image;
+        }
     }
 }

@@ -15,3 +15,11 @@ C:\Users\Gebruiker\Documents\GitHub\Beeldverwerking\obj\x86\Release\INFOIBV.Prop
 C:\Users\Gebruiker\Documents\GitHub\Beeldverwerking\obj\x86\Release\INFOIBV.csproj.GenerateResource.Cache
 C:\Users\Gebruiker\Documents\GitHub\Beeldverwerking\obj\x86\Release\INFOIBV.exe
 C:\Users\Gebruiker\Documents\GitHub\Beeldverwerking\obj\x86\Release\INFOIBV.pdb
+C:\Users\martijn\Documents\GitHub\Beeldverwerking\obj\x86\Release\INFOIBV.exe
+C:\Users\martijn\Documents\GitHub\Beeldverwerking\obj\x86\Release\INFOIBV.pdb
+C:\Users\martijn\Documents\GitHub\Beeldverwerking\bin\Release\INFOIBV.exe
+C:\Users\martijn\Documents\GitHub\Beeldverwerking\bin\Release\INFOIBV.pdb
+C:\Users\martijn\Documents\GitHub\Beeldverwerking\obj\x86\Release\INFOIBV.csprojResolveAssemblyReference.cache
+C:\Users\martijn\Documents\GitHub\Beeldverwerking\obj\x86\Release\INFOIBV.INFOIBV.resources
+C:\Users\martijn\Documents\GitHub\Beeldverwerking\obj\x86\Release\INFOIBV.Properties.Resources.resources
+C:\Users\martijn\Documents\GitHub\Beeldverwerking\obj\x86\Release\INFOIBV.csproj.GenerateResource.Cache
