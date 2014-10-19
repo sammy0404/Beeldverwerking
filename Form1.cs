@@ -46,7 +46,7 @@ namespace INFOIBV
             // Setup progress bar
             progressBar.Visible = true;
             progressBar.Minimum = 1;
-            progressBar.Maximum = InputImage.Size.Width * InputImage.Size.Height *45;
+            progressBar.Maximum = InputImage.Size.Width * InputImage.Size.Height *1150;
             progressBar.Value = 1;
             progressBar.Step = 1;
 
@@ -62,22 +62,34 @@ namespace INFOIBV
             //==========================================================================================
             // TODO: include here your own code
             int[,] imageValues = ToGrayscale(Image);
-            int[,] dilation = Dilation(imageValues);
-            int[,] erosion = Erosion(imageValues);
+            /*int[,] dilation = Dilation(imageValues,1);
+            int[,] erosion = Erosion(imageValues,1);
 
             imageValues = SubtractImage(dilation, erosion);
-            imageValues = Threshold(imageValues, 25);
 
+            imageValues = Threshold(imageValues, 25);
+            int[,] thresholdCopy = imageValues;
+
+            //imageValues = Erosion(imageValues, 1);
+            imageValues = Erosion(imageValues, 2);
             
-                imageValues = Erosion(imageValues);
-            imageValues = Dilation(imageValues);
             
-            int n = 1;
-            for (int i = 0; i < n;i++ )
+            int n = 120;
+            for (int i = 0; i < n; i++)
             {
-                imageValues = Dilation(imageValues);
-                imageValues = Erosion(imageValues);
+               imageValues = Dilation(imageValues,1);
+               imageValues = AND(imageValues, thresholdCopy);
+            }*/
+            int[,] circleimage = new int[InputImage.Size.Width, InputImage.Size.Height];
+
+            List<Tuple<int, int, int>> circles = FindCircles(imageValues, 90, 50, 100, 1, 0.7f);
+            foreach(Tuple<int, int ,int> circle in circles)
+            {
+                circleimage[circle.Item1, circle.Item2] = 255;
             }
+            imageValues = circleimage;
+            //imageValues = Closing(imageValues, 2);
+
                 //==========================================================================================
 
                 // Copy array to output Bitmap
@@ -116,7 +128,7 @@ namespace INFOIBV
             return values;
         }
 
-        private int[,] Dilation(int[,] image)
+        private int[,] Dilation(int[,] image, int size)
         {
             int[,] newImage = new int[image.GetLength(0), image.GetLength(1)];
 
@@ -126,34 +138,27 @@ namespace INFOIBV
                 {
                     List<int> values = new List<int>();
 
-                    values.Add(image[x, y]);                              // Get the pixel color at coordinate (x,y)
-
-                    if (y + 1 < image.GetLength(1))
-                        values.Add(image[x, y + 1]);
-                    if (y - 1 >= 0)
-                        values.Add(image[x, y - 1]);
-                    if (x + 1 < image.GetLength(0))
-                        values.Add(image[x + 1, y]);
-                    if (x - 1 >= 0)
-                        values.Add(image[x - 1, y]);
-
-                    if (x - 1 >= 0 && y - 1 >= 0)
-                        values.Add(image[x - 1, y - 1]);
-                    if (x - 1 >= 0 && y + 1 < image.GetLength(1))
-                        values.Add(image[x - 1, y + 1]);
-                    if (x + 1 < image.GetLength(0) && y + 1 < image.GetLength(1))
-                        values.Add(image[x + 1, y + 1]);
-                    if (x + 1 < image.GetLength(0) && y - 1 >= 0)
-                        values.Add(image[x + 1, y - 1]);
-                    
-                    newImage[x,y] = values.Max();
-                    progressBar.PerformStep();
+                    for (int sx = -size; sx <= size; sx++)
+                    {
+                        for(int sy = -size; sy <= size; sy++)
+                        {
+                            if (x + sx > 0 && x + sx < image.GetLength(0) && y + sy > 0 && y + sy < image.GetLength(1))
+                            {
+                                values.Add(image[x + sx, y + sy]);
+                                if(image[x + sx, y + sy] == 255)
+                                    goto DilationDone;
+                            }
+                        }
+                    }
+                DilationDone:
+                    newImage[x, y] = values.Max();
+                    //progressBar.PerformStep();
                 }
             }
             return newImage;
         }
 
-        private int[,] Erosion(int[,] image)
+        private int[,] Erosion(int[,] image, int size)
         {
             int[,] newImage = new int[image.GetLength(0), image.GetLength(1)];
 
@@ -163,28 +168,21 @@ namespace INFOIBV
                 {
                     List<int> values = new List<int>();
 
-                    values.Add(image[x, y]);                              // Get the pixel color at coordinate (x,y)
-
-                    if (y + 1 < image.GetLength(1))
-                        values.Add(image[x, y + 1]);
-                    if (y - 1 >= 0)
-                        values.Add(image[x, y - 1]);
-                    if (x + 1 < image.GetLength(0))
-                        values.Add(image[x + 1, y]);
-                    if (x - 1 >= 0)
-                        values.Add(image[x - 1, y]);
-
-                    if (x - 1 >= 0 && y - 1 >= 0)
-                        values.Add(image[x - 1, y - 1]);
-                    if (x - 1 >= 0 && y + 1 < image.GetLength(1))
-                        values.Add(image[x - 1, y + 1]);
-                    if (x + 1 < image.GetLength(0) && y + 1 < image.GetLength(1))
-                        values.Add(image[x + 1, y + 1]);
-                    if (x + 1 < image.GetLength(0) && y - 1 >= 0)
-                        values.Add(image[x + 1, y - 1]);
-
+                    for (int sx = -size; sx <= size; sx++)
+                    {
+                        for (int sy = -size; sy <= size; sy++)
+                        {
+                            if (x + sx > 0 && x + sx < image.GetLength(0) && y + sy > 0 && y + sy < image.GetLength(1))
+                            {
+                                values.Add(image[x + sx, y + sy]);
+                                if (image[x + sx, y + sy] == 0)
+                                    goto ErosionDone;
+                            }
+                        }
+                    }
+                ErosionDone:
                     newImage[x, y] = values.Min();
-                    progressBar.PerformStep();
+                    //progressBar.PerformStep();
                 }
             }
             return newImage;
@@ -219,6 +217,74 @@ namespace INFOIBV
                 }
             }
             return image;
+        }
+
+        private int[,] Opening(int[,] image, int size)
+        {
+            image = Erosion(image, size);
+            image = Dilation(image, size);
+            return image;
+        }
+
+        private int[,] Closing(int[,] image, int size)
+        {
+            image = Dilation(image, size);
+            image = Erosion(image, size);
+            return image;
+        }
+
+        private int[,] AND(int[,] image1, int[,] image2)
+        {
+            int[,] newImage = new int[image1.GetLength(0), image1.GetLength(1)];
+            for (int x = 0; x < InputImage.Size.Width; x++)
+            {
+                for (int y = 0; y < InputImage.Size.Height; y++)
+                {
+                    newImage[x,y] = Math.Min(image1[x, y], image2[x, y]);
+                    progressBar.PerformStep();
+                }
+            }
+            return newImage;
+        }
+
+        private List<Tuple<int,int,int>> FindCircles(int[,] image,int samplepoints, int minRadius, int maxRadius, int radiusStep, float threshold)
+        {
+            List<Tuple<int, int, int>> circles = new List<Tuple<int, int, int>>();
+            float degreesperstep = 360 / samplepoints;
+
+            for (int x = 0; x < InputImage.Size.Width; x++)
+            {
+                for (int y = 0; y < InputImage.Size.Height; y++)
+                {
+                   
+                    for (int radius = minRadius; radius <= maxRadius; radius += radiusStep)
+                    {
+                        int counter = 0;
+                        int misses = 0;
+                        for (float degree = 0; degree <= 360; degree += degreesperstep)
+                        {
+                            int dx = (int)(Math.Cos((degree * Math.PI) / 180) * radius);
+                            int dy = (int)(Math.Sin((degree * Math.PI) / 180) * radius);
+
+                            int xpos = dx + x;
+                            int ypos = dy + y;
+
+                            if (xpos >= 0 && xpos < InputImage.Size.Width && ypos >= 0 && ypos < InputImage.Size.Height && image[xpos, ypos] > 0)
+                                counter++;
+                            else
+                                misses++;
+
+                            if (misses > samplepoints - (threshold * samplepoints))
+                                break;
+                            
+                        }
+
+                        if (counter >= samplepoints * threshold)
+                            circles.Add(new Tuple<int, int, int>(x,y,radius));
+                    }
+                }
+            }
+            return circles;
         }
     }
 }
