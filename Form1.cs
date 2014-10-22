@@ -61,10 +61,11 @@ namespace INFOIBV
 
             //==========================================================================================
             // TODO: include here your own code
-            int[,] imageValues = ToGrayscale(Image);
-            /*int[,] dilation = Dilation(imageValues,1);
-            int[,] erosion = Erosion(imageValues,1);
+            int[,] imageValues = FilterWhite(Image,210);
+            //int[,] dilation = Dilation(imageValues,1);
 
+            imageValues = Threshold(imageValues, 130);
+            /*
             imageValues = SubtractImage(dilation, erosion);
 
             imageValues = Threshold(imageValues, 25);
@@ -80,14 +81,14 @@ namespace INFOIBV
                imageValues = Dilation(imageValues,1);
                imageValues = AND(imageValues, thresholdCopy);
             }*/
-            int[,] circleimage = new int[InputImage.Size.Width, InputImage.Size.Height];
+            //int[,] circleimage = new int[InputImage.Size.Width, InputImage.Size.Height];
 
-            List<Tuple<int, int, int>> circles = FindCircles(imageValues, 90, 50, 100, 1, 0.7f);
-            foreach(Tuple<int, int ,int> circle in circles)
-            {
-                circleimage[circle.Item1, circle.Item2] = 255;
-            }
-            imageValues = circleimage;
+            //List<Tuple<int, int, int>> circles = FindCircles(imageValues, 90, 50, 100, 1, 0.7f);
+            //foreach(Tuple<int, int ,int> circle in circles)
+            //{
+            //    circleimage[circle.Item1, circle.Item2] = 255;
+            // }
+            //imageValues = circleimage;
             //imageValues = Closing(imageValues, 2);
 
                 //==========================================================================================
@@ -285,6 +286,32 @@ namespace INFOIBV
                 }
             }
             return circles;
+        }
+
+        int[,] FilterWhite(Color[,] image, int threshold)
+        {
+            int[,] newImage = new int[InputImage.Size.Width, InputImage.Size.Height];
+
+            for (int x = 0; x < InputImage.Size.Width; x++)
+            {
+                for (int y = 0; y < InputImage.Size.Height; y++)
+                {
+                    int red = image[x,y].R;
+                    int blue = image[x,y].B;
+                    int green = image[x,y].G;
+
+                    int average = (red + blue + green)/3;
+
+                    //int totalDifference = (int)((Math.Abs(red-average) + Math.Abs(blue-average) + Math.Abs(green-average)) * (1-(Math.Pow((double)(red + blue + green)/765,2))));
+
+                    if(Math.Abs(red-blue) <= threshold && Math.Abs(green-blue) <= threshold && Math.Abs(blue-red) <= threshold)                    
+                        newImage[x,y]=0;
+                    else
+                        newImage[x,y]=255;
+                }
+            }
+
+            return newImage;
         }
     }
 }
