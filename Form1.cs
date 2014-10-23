@@ -22,7 +22,7 @@ namespace INFOIBV
 
         private void LoadImageButton_Click(object sender, EventArgs e)
         {
-           if (openImageDialog.ShowDialog() == DialogResult.OK)             // Open File Dialog
+            if (openImageDialog.ShowDialog() == DialogResult.OK)             // Open File Dialog
             {
                 string file = openImageDialog.FileName;                     // Get the file name
                 imageFileName.Text = file;                                  // Show file name
@@ -32,7 +32,7 @@ namespace INFOIBV
                     InputImage.Size.Height > 512 || InputImage.Size.Width > 512) // Dimension check
                     MessageBox.Show("Error in image dimensions (have to be > 0 and <= 512)");
                 else
-                    pictureBox1.Image = (Image) InputImage;                 // Display input image
+                    pictureBox1.Image = (Image)InputImage;                 // Display input image
             }
         }
 
@@ -46,7 +46,7 @@ namespace INFOIBV
             // Setup progress bar
             progressBar.Visible = true;
             progressBar.Minimum = 1;
-            progressBar.Maximum = InputImage.Size.Width * InputImage.Size.Height *1150;
+            progressBar.Maximum = InputImage.Size.Width * InputImage.Size.Height * 1150;
             progressBar.Value = 1;
             progressBar.Step = 1;
 
@@ -61,8 +61,11 @@ namespace INFOIBV
 
             //==========================================================================================
             // TODO: include here your own code
-            int[,] imageValues = FilterWhite(Image,150);
+            int[,] imageValues = FilterWhite(Image, 150);
 
+            imageValues = Closing(imageValues, 4);
+            imageValues = Opening(imageValues, 1);
+            imageValues = FindObjects(imageValues);
             //imageValues = Erosion(imageValues, 1);
             //imageValues = Dilation(imageValues,3);
             //imageValues = Opening(imageValues, 5);
@@ -92,22 +95,22 @@ namespace INFOIBV
             //imageValues = circleimage;
             //imageValues = Closing(imageValues, 2);
 
-                //==========================================================================================
+            //==========================================================================================
 
-                // Copy array to output Bitmap
-                for (int x = 0; x < InputImage.Size.Width; x++)
+            // Copy array to output Bitmap
+            for (int x = 0; x < InputImage.Size.Width; x++)
+            {
+                for (int y = 0; y < InputImage.Size.Height; y++)
                 {
-                    for (int y = 0; y < InputImage.Size.Height; y++)
-                    {
-                        int grayValue = imageValues[x, y];
-                        OutputImage.SetPixel(x, y, Color.FromArgb(grayValue, grayValue, grayValue));               // Set the pixel color at coordinate (x,y)
-                    }
+                    int grayValue = imageValues[x, y];
+                    OutputImage.SetPixel(x, y, Color.FromArgb(grayValue, grayValue, grayValue));               // Set the pixel color at coordinate (x,y)
                 }
-            
+            }
+
             pictureBox2.Image = (Image)OutputImage;                         // Display output image
             progressBar.Visible = false;                                    // Hide progress bar
         }
-        
+
         private void saveButton_Click(object sender, EventArgs e)
         {
             if (OutputImage == null) return;                                // Get out if no output image
@@ -123,7 +126,7 @@ namespace INFOIBV
                 for (int y = 0; y < InputImage.Size.Height; y++)
                 {
                     Color pixelColor = image[x, y];                              // Get the pixel color at coordinate (x,y)
-                    values[x,y] = (int)(0.2126 * pixelColor.R + 0.7152 * pixelColor.G + 0.0722 * pixelColor.B);
+                    values[x, y] = (int)(0.2126 * pixelColor.R + 0.7152 * pixelColor.G + 0.0722 * pixelColor.B);
                     progressBar.PerformStep();                                   // Increment progress bar
                 }
             }
@@ -142,12 +145,12 @@ namespace INFOIBV
 
                     for (int sx = -size; sx <= size; sx++)
                     {
-                        for(int sy = -size; sy <= size; sy++)
+                        for (int sy = -size; sy <= size; sy++)
                         {
                             if (x + sx > 0 && x + sx < image.GetLength(0) && y + sy > 0 && y + sy < image.GetLength(1))
                             {
                                 values.Add(image[x + sx, y + sy]);
-                                if(image[x + sx, y + sy] == 255)
+                                if (image[x + sx, y + sy] == 255)
                                     goto DilationDone;
                             }
                         }
@@ -198,7 +201,7 @@ namespace INFOIBV
             {
                 for (int y = 0; y < InputImage.Size.Height; y++)
                 {
-                    newImage[x, y] = image1[x, y] - image2[x,y];
+                    newImage[x, y] = image1[x, y] - image2[x, y];
                     progressBar.PerformStep();
                 }
             }
@@ -211,10 +214,10 @@ namespace INFOIBV
             {
                 for (int y = 0; y < InputImage.Size.Height; y++)
                 {
-                    if(image[x,y] < thresholdValue)
-                        image[x,y] = 0;
+                    if (image[x, y] < thresholdValue)
+                        image[x, y] = 0;
                     else
-                        image[x,y] = 255;
+                        image[x, y] = 255;
                     progressBar.PerformStep();
                 }
             }
@@ -242,14 +245,14 @@ namespace INFOIBV
             {
                 for (int y = 0; y < InputImage.Size.Height; y++)
                 {
-                    newImage[x,y] = Math.Min(image1[x, y], image2[x, y]);
+                    newImage[x, y] = Math.Min(image1[x, y], image2[x, y]);
                     progressBar.PerformStep();
                 }
             }
             return newImage;
         }
 
-        private List<Tuple<int,int,int>> FindCircles(int[,] image,int samplepoints, int minRadius, int maxRadius, int radiusStep, float threshold)
+        private List<Tuple<int, int, int>> FindCircles(int[,] image, int samplepoints, int minRadius, int maxRadius, int radiusStep, float threshold)
         {
             List<Tuple<int, int, int>> circles = new List<Tuple<int, int, int>>();
             float degreesperstep = 360 / samplepoints;
@@ -258,7 +261,7 @@ namespace INFOIBV
             {
                 for (int y = 0; y < InputImage.Size.Height; y++)
                 {
-                   
+
                     for (int radius = minRadius; radius <= maxRadius; radius += radiusStep)
                     {
                         int counter = 0;
@@ -278,11 +281,11 @@ namespace INFOIBV
 
                             if (misses > samplepoints - (threshold * samplepoints))
                                 break;
-                            
+
                         }
 
                         if (counter >= samplepoints * threshold)
-                            circles.Add(new Tuple<int, int, int>(x,y,radius));
+                            circles.Add(new Tuple<int, int, int>(x, y, radius));
                     }
                 }
             }
@@ -297,22 +300,80 @@ namespace INFOIBV
             {
                 for (int y = 0; y < InputImage.Size.Height; y++)
                 {
-                    int red = image[x,y].R;
-                    int blue = image[x,y].B;
-                    int green = image[x,y].G;
+                    int red = image[x, y].R;
+                    int blue = image[x, y].B;
+                    int green = image[x, y].G;
 
-                    int average = (red + blue + green)/3;
+                    int average = (red + blue + green) / 3;
 
-                    int totalDifference = (int)((Math.Abs(red-average) + Math.Abs(blue-average) + Math.Abs(green-average)) * 756f/(red+blue+green));
+                    int totalDifference = (int)((Math.Abs(red - average) + Math.Abs(blue - average) + Math.Abs(green - average)) * 756f / (red + blue + green));
 
-                    if(totalDifference > threshold)                    
-                        newImage[x,y]=255;
+                    if (totalDifference > threshold)
+                        newImage[x, y] = 255;
                     else
-                        newImage[x,y]=0;
+                        newImage[x, y] = 0;
                 }
             }
 
             return newImage;
+        }
+        int[,] FindObjects(int[,] image)
+        {
+            int[,] tempImage = new int[InputImage.Size.Width, InputImage.Size.Height];
+            int foundObjects = 0;
+            for (int x = 0; x < InputImage.Size.Width; x++)
+            {
+                for (int y = 0; y < InputImage.Size.Height; y++)
+                {
+                    if (image[x, y] > 0)
+                    {
+                        foundObjects++;
+
+                        tempImage[x, y] = foundObjects;
+                        bool finished = false;
+                        int[,] dilationImage;
+                        int[,] finaldilationimage = tempImage;
+                        do
+                        {
+
+                            dilationImage = Dilation(tempImage, 1);
+                            finaldilationimage = AND(dilationImage, image);
+                            if (Equals(tempImage, finaldilationimage))
+                                finished = true;
+                            else
+                                tempImage = finaldilationimage;
+
+                        } while (!finished);
+
+                        for (int tx = 0; tx < InputImage.Size.Width; tx++)
+                        {
+                            for (int ty = 0; ty < InputImage.Size.Height; ty++)
+                            {
+                                if (tempImage[x, y] == foundObjects)
+                                    image[x, y] = 0;
+                            }
+                        }
+
+
+                            
+                        //dilation
+                    }
+                }
+            }
+            return tempImage;
+        }
+
+        bool Equals(int[,] image1, int[,] image2)
+        {
+            for (int x = 0; x < InputImage.Size.Width; x++)
+            {
+                for (int y = 0; y < InputImage.Size.Height; y++)
+                {
+                    if (image1[x, y] != image2[x, y])
+                        return false;
+                }
+            }
+            return true;
         }
     }
 }
