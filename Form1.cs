@@ -14,6 +14,7 @@ namespace INFOIBV
     {
         private Bitmap InputImage;
         private Bitmap OutputImage;
+        Stack<Tuple<int, int>> bla = new Stack<Tuple<int, int>>();
 
         public INFOIBV()
         {
@@ -330,45 +331,47 @@ namespace INFOIBV
         int[,] FindObjects(int[,] image)
         {
             int[,] objectImage = new int[InputImage.Size.Width, InputImage.Size.Height];
-            int foundObjects = 1;
+            int foundObjects = 0;
             for (int x = 0; x < InputImage.Size.Width; x++)
             {
                 for (int y = 0; y < InputImage.Size.Height; y++)
                 {
-                    if (image[x, y] == 255 && objectImage[x,y] == 0)
+                    if (image[x, y] == 255 && objectImage[x, y] == 0)
                     {
+
+                        foundObjects++;
+                        bla.Push(new Tuple<int, int>(x, y));
+                        while (bla.Count > 0)
+                        {
+                            Tuple<int, int> coord = bla.Pop();
+                            FindWholeObject(image, ref objectImage, coord.Item1, coord.Item2, foundObjects);
+                        }
                         
-                        if(FindWholeObject(image, ref objectImage, x,y,foundObjects,0))
-                            foundObjects++;
                     }
                 }
             }
             return objectImage;
         }
 
-        bool FindWholeObject(int[,] image, ref int[,] objectImage, int x, int y, int objectNumber, int depth)
+        void FindWholeObject(int[,] image, ref int[,] objectImage, int x, int y, int objectNumber)
         {
             objectImage[x, y] = objectNumber;
-            depth++;
-            if (depth > 2000)
-                return false;
-            if(x-1 >= 0 && y -1 >= 0 && y - 1 < InputImage.Size.Height && InputImage.Size.Width > x-1 && image[x -1 ,y - 1] == 255 && objectImage[x-1,y-1] == 0)
-                FindWholeObject(image, ref objectImage, x-1, y-1, objectNumber,depth);
-            if (x - 1 >= 0 && y - 1 >= 0 && y - 1 < InputImage.Size.Height && InputImage.Size.Width > x && image[x, y - 1] == 255 && objectImage[x, y - 1] == 0)
-                FindWholeObject(image, ref objectImage, x, y - 1, objectNumber, depth);
-            if (InputImage.Size.Width > x + 1 && x -+1 >= 0 && y - 1 >= 0 && y - 1 < InputImage.Size.Height && image[x + 1, y - 1] == 255 && objectImage[x + 1, y] == 0)
-                FindWholeObject(image, ref objectImage, x + 1, y - 1, objectNumber,depth);
+            if (x - 1 >= 0 && y - 1 >= 0 && y - 1 < InputImage.Size.Height && InputImage.Size.Width > x - 1 && image[x - 1, y - 1] == 255 && objectImage[x - 1, y - 1] == 0)
+                bla.Push(new Tuple<int, int>(x - 1, y - 1));
+            if (x >= 0 && y - 1 >= 0 && y - 1 < InputImage.Size.Height && InputImage.Size.Width > x && image[x, y - 1] == 255 && objectImage[x, y - 1] == 0)
+                bla.Push(new Tuple<int, int>(x, y - 1));
+            if (InputImage.Size.Width > x + 1 && x +1 >= 0 && y - 1 >= 0 && y - 1 < InputImage.Size.Height && image[x + 1, y - 1] == 255 && objectImage[x + 1, y] == 0)
+                bla.Push(new Tuple<int, int>(x + 1, y - 1));
             if (InputImage.Size.Width > x - 1 && x - 1 >= 0 && y >= 0 && y < InputImage.Size.Height && image[x - 1, y] == 255 && objectImage[x - 1, y] == 0)
-                FindWholeObject(image, ref objectImage, x - 1, y, objectNumber, depth);
+                bla.Push(new Tuple<int, int>(x - 1, y));
             if (InputImage.Size.Width > x + 1 && x + 1 >= 0 && y >= 0 && y < InputImage.Size.Height && image[x + 1, y] == 255 && objectImage[x + 1, y] == 0)
-                FindWholeObject(image, ref objectImage, x + 1, y, objectNumber,depth);
-            if (InputImage.Size.Width > x-1 && x - 1 >= 0 && y + 1 >= 0 && y + 1 < InputImage.Size.Height && image[x - 1, y + 1] == 255 && objectImage[x - 1, y + 1] == 0)
-                FindWholeObject(image, ref objectImage, x - 1, y + 1, objectNumber, depth);
+                bla.Push(new Tuple<int, int>(x+1, y));
+            if (InputImage.Size.Width > x - 1 && x - 1 >= 0 && y + 1 >= 0 && y + 1 < InputImage.Size.Height && image[x - 1, y + 1] == 255 && objectImage[x - 1, y + 1] == 0)
+                bla.Push(new Tuple<int, int>(x-1, y+1));
             if (InputImage.Size.Width > x && x >= 0 && y + 1 >= 0 && y + 1 < InputImage.Size.Height && image[x, y + 1] == 255 && objectImage[x, y + 1] == 0)
-                FindWholeObject(image, ref objectImage, x, y + 1, objectNumber, depth);
+                bla.Push(new Tuple<int, int>(x, y+1));
             if (InputImage.Size.Width > x + 1 && x + 1 >= 0 && y + 1 >= 0 && y + 1 < InputImage.Size.Height && image[x + 1, y + 1] == 255 && objectImage[x + 1, y + 1] == 0)
-                FindWholeObject(image, ref objectImage, x + 1, y + 1, objectNumber, depth);
-            return true;
+                bla.Push(new Tuple<int, int>(x+1, y+1));
         }
 
         bool Equals(int[,] image1, int[,] image2)
