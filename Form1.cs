@@ -61,10 +61,11 @@ namespace INFOIBV
 
             //==========================================================================================
             // TODO: include here your own code
-            int[,] imageValues = FilterWhite(Image,210);
-            //int[,] dilation = Dilation(imageValues,1);
+            int[,] imageValues = FilterWhite(Image,150);
 
-            imageValues = Threshold(imageValues, 130);
+            //imageValues = Erosion(imageValues, 1);
+            //imageValues = Dilation(imageValues,3);
+            //imageValues = Opening(imageValues, 5);
             /*
             imageValues = SubtractImage(dilation, erosion);
 
@@ -302,12 +303,12 @@ namespace INFOIBV
 
                     int average = (red + blue + green)/3;
 
-                    //int totalDifference = (int)((Math.Abs(red-average) + Math.Abs(blue-average) + Math.Abs(green-average)) * (1-(Math.Pow((double)(red + blue + green)/765,2))));
+                    int totalDifference = (int)((Math.Abs(red-average) + Math.Abs(blue-average) + Math.Abs(green-average)) * 756f/(red+blue+green));
 
-                    if(Math.Abs(red-blue) <= threshold && Math.Abs(green-blue) <= threshold && Math.Abs(blue-red) <= threshold)                    
-                        newImage[x,y]=0;
-                    else
+                    if(totalDifference > threshold)                    
                         newImage[x,y]=255;
+                    else
+                        newImage[x,y]=0;
                 }
             }
 
