@@ -66,6 +66,15 @@ namespace INFOIBV
             imageValues = Closing(imageValues, 4);
             imageValues = Opening(imageValues, 1);
             imageValues = FindObjects(imageValues);
+
+            for (int x = 0; x < InputImage.Size.Width; x++)
+            {
+                for (int y = 0; y < InputImage.Size.Height; y++)
+                {
+                    imageValues[x, y] *= 10;
+                }
+            }
+
             //imageValues = Erosion(imageValues, 1);
             //imageValues = Dilation(imageValues,3);
             //imageValues = Opening(imageValues, 5);
@@ -317,50 +326,49 @@ namespace INFOIBV
 
             return newImage;
         }
+
         int[,] FindObjects(int[,] image)
         {
-            int[,] tempImage = new int[InputImage.Size.Width, InputImage.Size.Height];
-            int foundObjects = 0;
+            int[,] objectImage = new int[InputImage.Size.Width, InputImage.Size.Height];
+            int foundObjects = 1;
             for (int x = 0; x < InputImage.Size.Width; x++)
             {
                 for (int y = 0; y < InputImage.Size.Height; y++)
                 {
-                    if (image[x, y] > 0)
+                    if (image[x, y] == 255 && objectImage[x,y] == 0)
                     {
-                        foundObjects++;
-
-                        tempImage[x, y] = foundObjects;
-                        bool finished = false;
-                        int[,] dilationImage;
-                        int[,] finaldilationimage = tempImage;
-                        do
-                        {
-
-                            dilationImage = Dilation(tempImage, 1);
-                            finaldilationimage = AND(dilationImage, image);
-                            if (Equals(tempImage, finaldilationimage))
-                                finished = true;
-                            else
-                                tempImage = finaldilationimage;
-
-                        } while (!finished);
-
-                        for (int tx = 0; tx < InputImage.Size.Width; tx++)
-                        {
-                            for (int ty = 0; ty < InputImage.Size.Height; ty++)
-                            {
-                                if (tempImage[x, y] == foundObjects)
-                                    image[x, y] = 0;
-                            }
-                        }
-
-
-                            
-                        //dilation
+                        
+                        if(FindWholeObject(image, ref objectImage, x,y,foundObjects,0))
+                            foundObjects++;
                     }
                 }
             }
-            return tempImage;
+            return objectImage;
+        }
+
+        bool FindWholeObject(int[,] image, ref int[,] objectImage, int x, int y, int objectNumber, int depth)
+        {
+            objectImage[x, y] = objectNumber;
+            depth++;
+            if (depth > 2000)
+                return false;
+            if(x-1 >= 0 && y -1 >= 0 && y - 1 < InputImage.Size.Height && InputImage.Size.Width > x-1 && image[x -1 ,y - 1] == 255 && objectImage[x-1,y-1] == 0)
+                FindWholeObject(image, ref objectImage, x-1, y-1, objectNumber,depth);
+            if (x - 1 >= 0 && y - 1 >= 0 && y - 1 < InputImage.Size.Height && InputImage.Size.Width > x && image[x, y - 1] == 255 && objectImage[x, y - 1] == 0)
+                FindWholeObject(image, ref objectImage, x, y - 1, objectNumber, depth);
+            if (InputImage.Size.Width > x + 1 && x -+1 >= 0 && y - 1 >= 0 && y - 1 < InputImage.Size.Height && image[x + 1, y - 1] == 255 && objectImage[x + 1, y] == 0)
+                FindWholeObject(image, ref objectImage, x + 1, y - 1, objectNumber,depth);
+            if (InputImage.Size.Width > x - 1 && x - 1 >= 0 && y >= 0 && y < InputImage.Size.Height && image[x - 1, y] == 255 && objectImage[x - 1, y] == 0)
+                FindWholeObject(image, ref objectImage, x - 1, y, objectNumber, depth);
+            if (InputImage.Size.Width > x + 1 && x + 1 >= 0 && y >= 0 && y < InputImage.Size.Height && image[x + 1, y] == 255 && objectImage[x + 1, y] == 0)
+                FindWholeObject(image, ref objectImage, x + 1, y, objectNumber,depth);
+            if (InputImage.Size.Width > x-1 && x - 1 >= 0 && y + 1 >= 0 && y + 1 < InputImage.Size.Height && image[x - 1, y + 1] == 255 && objectImage[x - 1, y + 1] == 0)
+                FindWholeObject(image, ref objectImage, x - 1, y + 1, objectNumber, depth);
+            if (InputImage.Size.Width > x && x >= 0 && y + 1 >= 0 && y + 1 < InputImage.Size.Height && image[x, y + 1] == 255 && objectImage[x, y + 1] == 0)
+                FindWholeObject(image, ref objectImage, x, y + 1, objectNumber, depth);
+            if (InputImage.Size.Width > x + 1 && x + 1 >= 0 && y + 1 >= 0 && y + 1 < InputImage.Size.Height && image[x + 1, y + 1] == 255 && objectImage[x + 1, y + 1] == 0)
+                FindWholeObject(image, ref objectImage, x + 1, y + 1, objectNumber, depth);
+            return true;
         }
 
         bool Equals(int[,] image1, int[,] image2)
