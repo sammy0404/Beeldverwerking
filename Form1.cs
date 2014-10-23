@@ -66,15 +66,15 @@ namespace INFOIBV
 
             imageValues = Closing(imageValues, 4);
             imageValues = Opening(imageValues, 1);
-            imageValues = FindObjects(imageValues);
-
-            for (int x = 0; x < InputImage.Size.Width; x++)
-            {
-                for (int y = 0; y < InputImage.Size.Height; y++)
-                {
-                    imageValues[x, y] *= 10;
-                }
-            }
+       //     imageValues = FindObjects(imageValues);
+            imageValues = ObjectDistance(imageValues);
+            //for (int x = 0; x < InputImage.Size.Width; x++)
+            //{
+            //    for (int y = 0; y < InputImage.Size.Height; y++)
+            //    {
+            //        imageValues[x, y] *= 10;
+            //    }
+            //}
 
             //imageValues = Erosion(imageValues, 1);
             //imageValues = Dilation(imageValues,3);
@@ -346,7 +346,7 @@ namespace INFOIBV
                             Tuple<int, int> coord = bla.Pop();
                             FindWholeObject(image, ref objectImage, coord.Item1, coord.Item2, foundObjects);
                         }
-                        
+
                     }
                 }
             }
@@ -360,18 +360,18 @@ namespace INFOIBV
                 bla.Push(new Tuple<int, int>(x - 1, y - 1));
             if (x >= 0 && y - 1 >= 0 && y - 1 < InputImage.Size.Height && InputImage.Size.Width > x && image[x, y - 1] == 255 && objectImage[x, y - 1] == 0)
                 bla.Push(new Tuple<int, int>(x, y - 1));
-            if (InputImage.Size.Width > x + 1 && x +1 >= 0 && y - 1 >= 0 && y - 1 < InputImage.Size.Height && image[x + 1, y - 1] == 255 && objectImage[x + 1, y] == 0)
+            if (InputImage.Size.Width > x + 1 && x + 1 >= 0 && y - 1 >= 0 && y - 1 < InputImage.Size.Height && image[x + 1, y - 1] == 255 && objectImage[x + 1, y] == 0)
                 bla.Push(new Tuple<int, int>(x + 1, y - 1));
             if (InputImage.Size.Width > x - 1 && x - 1 >= 0 && y >= 0 && y < InputImage.Size.Height && image[x - 1, y] == 255 && objectImage[x - 1, y] == 0)
                 bla.Push(new Tuple<int, int>(x - 1, y));
             if (InputImage.Size.Width > x + 1 && x + 1 >= 0 && y >= 0 && y < InputImage.Size.Height && image[x + 1, y] == 255 && objectImage[x + 1, y] == 0)
-                bla.Push(new Tuple<int, int>(x+1, y));
+                bla.Push(new Tuple<int, int>(x + 1, y));
             if (InputImage.Size.Width > x - 1 && x - 1 >= 0 && y + 1 >= 0 && y + 1 < InputImage.Size.Height && image[x - 1, y + 1] == 255 && objectImage[x - 1, y + 1] == 0)
-                bla.Push(new Tuple<int, int>(x-1, y+1));
+                bla.Push(new Tuple<int, int>(x - 1, y + 1));
             if (InputImage.Size.Width > x && x >= 0 && y + 1 >= 0 && y + 1 < InputImage.Size.Height && image[x, y + 1] == 255 && objectImage[x, y + 1] == 0)
-                bla.Push(new Tuple<int, int>(x, y+1));
+                bla.Push(new Tuple<int, int>(x, y + 1));
             if (InputImage.Size.Width > x + 1 && x + 1 >= 0 && y + 1 >= 0 && y + 1 < InputImage.Size.Height && image[x + 1, y + 1] == 255 && objectImage[x + 1, y + 1] == 0)
-                bla.Push(new Tuple<int, int>(x+1, y+1));
+                bla.Push(new Tuple<int, int>(x + 1, y + 1));
         }
 
         bool Equals(int[,] image1, int[,] image2)
@@ -385,6 +385,60 @@ namespace INFOIBV
                 }
             }
             return true;
+        }
+
+        int[,] ObjectDistance(int[,] image)
+        {
+
+            int[,] DistanceImage = new int[InputImage.Size.Width, InputImage.Size.Height];
+            for (int x = 0; x < InputImage.Size.Width; x++)
+            {
+                for (int y = 0; y < InputImage.Size.Height; y++)
+                {
+                    if (image[x, y] == 255)
+                    {
+                        DistanceImage[x, y] = int.MaxValue;
+                    }
+                }
+            }
+            for (int y = 0; y < InputImage.Size.Height; y++)
+            {
+                for (int x = 0; x < InputImage.Size.Width; x++)
+                {
+                    List<int> IntKernel = new List<int>();
+                    if (x - 1 >= 0 && y - 1 >= 0)
+                        IntKernel.Add(DistanceImage[x - 1, y - 1] + 2);
+                    if (y - 1 >= 0)
+                        IntKernel.Add(DistanceImage[x, y - 1] + 1);
+                    if (x + 1 < InputImage.Size.Width && y - 1 >= 0)
+                        IntKernel.Add(DistanceImage[x + 1, y - 1] + 2);
+                    if (x - 1 >= 0)
+                        IntKernel.Add(DistanceImage[x - 1, y] + 1);
+                    IntKernel.Add(DistanceImage[x, y]);
+                    DistanceImage[x, y] = IntKernel.Min();
+                }
+            }
+            for (int y = InputImage.Size.Height-1; y >=0; y--)
+            {
+                for (int x = InputImage.Size.Width-1; x >=0; x--)
+                {
+                    List<int> IntKernel = new List<int>();
+                    if (x - 1 >= 0 && y + 1 < InputImage.Size.Height)
+                        IntKernel.Add(DistanceImage[x - 1, y + 1] + 2);
+                    if (y + 1 < InputImage.Size.Height)
+                        IntKernel.Add(DistanceImage[x, y + 1] + 1);
+                    if (x + 1 < InputImage.Size.Width && y + 1 < InputImage.Size.Height)
+                        IntKernel.Add(DistanceImage[x + 1, y + 1] + 2);
+                    if (x + 1 < InputImage.Size.Width)
+                        IntKernel.Add(DistanceImage[x + 1, y] + 1);
+                    IntKernel.Add(DistanceImage[x, y]);
+                    DistanceImage[x, y] = IntKernel.Min();
+                }
+            }
+
+
+
+            return DistanceImage;
         }
     }
 }
