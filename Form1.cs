@@ -15,6 +15,7 @@ namespace INFOIBV
         private Bitmap InputImage;
         private Bitmap OutputImage;
         Stack<Tuple<int, int>> bla = new Stack<Tuple<int, int>>();
+        
 
         public INFOIBV()
         {
@@ -62,18 +63,66 @@ namespace INFOIBV
 
             //==========================================================================================
             // TODO: include here your own code
-            int[,] imageValues = FilterWhite(Image, 150);
-
+            int[,] imageValues = FilterWhite(Image, 35);
+            imageValues = Erosion(imageValues, 1);
             imageValues = Closing(imageValues, 4);
-            imageValues = Opening(imageValues, 1);
-       //     imageValues = FindObjects(imageValues);
+
+            PriorityQueue q = new PriorityQueue();
+
+            q.Add(1, 2, 12);
+            q.Add(1, 6, 11);
+            q.Add(1, 10000, 10);
+            q.Add(1, 1, 9);
+            q.Add(1, 1, 8);
+            q.Add(1, 1, 7);
+            Console.WriteLine(q.ExtractMin().Item3);
+            q.Add(1, 1, 6);
+            q.Add(1, 1, 5);
+            Console.WriteLine(q.ExtractMin().Item3);
+            q.Add(1, 1, 3);
+            q.Add(1, 1, 113);
+            q.Add(1, 1, 2);
+            Console.WriteLine(q.ExtractMin().Item3);
+            q.Add(1, 1, 1);
+            q.Add(1, 1, 0);
+            q.Add(1, 1, -1);
+            q.Add(1, 1, -2);
+
+            Console.WriteLine(q.ExtractMin().Item3);
+            Console.WriteLine(q.ExtractMin().Item3);
+            Console.WriteLine(q.ExtractMin().Item3);
+            Console.WriteLine(q.ExtractMin().Item3);
+            Console.WriteLine(q.ExtractMin().Item3);
+            Console.WriteLine(q.ExtractMin().Item3);
+            Console.WriteLine(q.ExtractMin().Item3);
+            Console.WriteLine(q.ExtractMin().Item3);
+            Console.WriteLine(q.ExtractMin().Item3);
+            Console.WriteLine(q.ExtractMin().Item3);
+            Console.WriteLine(q.ExtractMin().Item3);
+            Console.WriteLine(q.ExtractMin().Item3);
+            //Console.WriteLine(q.ExtractMin().Item3);
+            //Console.WriteLine(q.ExtractMin().Item3);
+            //Console.WriteLine(q.ExtractMin().Item3);
+
+            if (q.ExtractMin() == null)
+                Console.WriteLine("done");
+            else
+                Console.WriteLine("error");
+            //int[,] gray = ToGrayscale(Image);
+            //int[,] erosionImage = Erosion(gray, 1);
+            //int[,] dilationImage = Dilation(gray, 1);
+
+            //int[,] imageValues = SubtractImage(dilationImage, erosionImage);
+            //imageValues = Opening(imageValues, 2);
+            //imageValues = FindObjects(imageValues);
             imageValues = ObjectDistance(imageValues);
+            //imageValues = Threshold(imageValues, 10);
             //for (int x = 0; x < InputImage.Size.Width; x++)
             //{
-            //    for (int y = 0; y < InputImage.Size.Height; y++)
-            //    {
-            //        imageValues[x, y] *= 10;
-            //    }
+             //   for (int y = 0; y < InputImage.Size.Height; y++)
+              //  {
+               //     imageValues[x, y] *= 10;
+               // }
             //}
 
             //imageValues = Erosion(imageValues, 1);
@@ -316,7 +365,7 @@ namespace INFOIBV
 
                     int average = (red + blue + green) / 3;
 
-                    int totalDifference = (int)((Math.Abs(red - average) + Math.Abs(blue - average) + Math.Abs(green - average)) * 756f / (red + blue + green));
+                    int totalDifference = (int)((Math.Abs(red - average) + Math.Abs(blue - average) + Math.Abs(green - average)) * (756f / (red + blue + green)));
 
                     if (totalDifference > threshold)
                         newImage[x, y] = 255;
@@ -435,10 +484,89 @@ namespace INFOIBV
                     DistanceImage[x, y] = IntKernel.Min();
                 }
             }
-
-
-
             return DistanceImage;
+        }
+    }
+
+    class PriorityQueue
+    {
+        List<Tuple<int, int, int>> heap;
+        int size;
+
+        public PriorityQueue()
+        {
+            heap = new List<Tuple<int, int, int>>();
+        }
+
+        public void Add(int x, int y , int grayValue)
+        {
+            Tuple<int, int, int> newValue = new Tuple<int, int, int>(x, y, grayValue);
+
+            heap.Add(newValue);
+            size++;
+
+            int currentPlace = size - 1;
+
+            while(heap[Parent(currentPlace)].Item3 > heap[currentPlace].Item3 && currentPlace != 0)
+            {
+                Tuple<int, int, int> temp = heap[Parent(currentPlace)];
+                heap[Parent(currentPlace)] = heap[currentPlace];
+                heap[currentPlace] = temp;
+                currentPlace = Parent(currentPlace);
+            }
+        }
+
+        public Tuple<int, int, int> ExtractMin()
+        {
+            Tuple<int, int, int> min;
+
+            if (size > 0)
+                min = heap[0];
+            else
+                return null;
+
+            Tuple<int, int, int> last = heap[size - 1];
+            size--;
+            heap[0] = last;
+            int currentPlace =0;
+            
+            while(Left(currentPlace)<=size)
+            {
+                int smallest = currentPlace;
+
+                if(heap[Left(currentPlace)].Item3 < heap[smallest].Item3)
+                {
+                    smallest = Left(currentPlace);
+                }
+                if(Right(currentPlace) <= size && heap[Right(currentPlace)].Item3 < heap[smallest].Item3)
+                {
+                    smallest = Right(currentPlace);
+                }
+
+                if (currentPlace == smallest)
+                    break;
+
+                Tuple<int, int, int> temp = heap[currentPlace];
+                heap[currentPlace] = heap[smallest];
+                heap[smallest] = temp;                
+                currentPlace = smallest;                
+            }
+            return min;
+        }
+
+        private int Left(int i)
+        {
+            return i * 2 + 1;
+        }
+
+        private int Right(int i)
+        {
+            return i * 2 + 2;
+        }
+
+        private int Parent(int i)
+        {
+            return (i-1) / 2;
         }
     }
 }
