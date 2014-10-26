@@ -14,8 +14,8 @@ namespace INFOIBV
     {
         private Bitmap InputImage;
         private Bitmap OutputImage;
-        Stack<Tuple<int, int>> bla = new Stack<Tuple<int, int>>();
-        
+        Stack<Tuple<int, int>> stack = new Stack<Tuple<int, int>>();
+
 
         public INFOIBV()
         {
@@ -66,63 +66,27 @@ namespace INFOIBV
             int[,] imageValues = FilterWhite(Image, 35);
             imageValues = Erosion(imageValues, 1);
             imageValues = Closing(imageValues, 4);
-
-            PriorityQueue q = new PriorityQueue();
-
-            q.Add(1, 2, 12);
-            q.Add(1, 6, 11);
-            q.Add(1, 10000, 10);
-            q.Add(1, 1, 9);
-            q.Add(1, 1, 8);
-            q.Add(1, 1, 7);
-            Console.WriteLine(q.ExtractMin().Item3);
-            q.Add(1, 1, 6);
-            q.Add(1, 1, 5);
-            Console.WriteLine(q.ExtractMin().Item3);
-            q.Add(1, 1, 3);
-            q.Add(1, 1, 113);
-            q.Add(1, 1, 2);
-            Console.WriteLine(q.ExtractMin().Item3);
-            q.Add(1, 1, 1);
-            q.Add(1, 1, 0);
-            q.Add(1, 1, -1);
-            q.Add(1, 1, -2);
-
-            Console.WriteLine(q.ExtractMin().Item3);
-            Console.WriteLine(q.ExtractMin().Item3);
-            Console.WriteLine(q.ExtractMin().Item3);
-            Console.WriteLine(q.ExtractMin().Item3);
-            Console.WriteLine(q.ExtractMin().Item3);
-            Console.WriteLine(q.ExtractMin().Item3);
-            Console.WriteLine(q.ExtractMin().Item3);
-            Console.WriteLine(q.ExtractMin().Item3);
-            Console.WriteLine(q.ExtractMin().Item3);
-            Console.WriteLine(q.ExtractMin().Item3);
-            Console.WriteLine(q.ExtractMin().Item3);
-            Console.WriteLine(q.ExtractMin().Item3);
-            //Console.WriteLine(q.ExtractMin().Item3);
-            //Console.WriteLine(q.ExtractMin().Item3);
-            //Console.WriteLine(q.ExtractMin().Item3);
-
-            if (q.ExtractMin() == null)
-                Console.WriteLine("done");
-            else
-                Console.WriteLine("error");
+            int[,] white = imageValues;
+            //int[,] imageValues = ToGrayscale(Image);
             //int[,] gray = ToGrayscale(Image);
             //int[,] erosionImage = Erosion(gray, 1);
             //int[,] dilationImage = Dilation(gray, 1);
 
+           
             //int[,] imageValues = SubtractImage(dilationImage, erosionImage);
             //imageValues = Opening(imageValues, 2);
             //imageValues = FindObjects(imageValues);
             imageValues = ObjectDistance(imageValues);
+            imageValues = Invert(imageValues);
+            int[,]watershedLines = WaterShed(imageValues);
+            imageValues = SubtractImage(white, watershedLines);
             //imageValues = Threshold(imageValues, 10);
             //for (int x = 0; x < InputImage.Size.Width; x++)
             //{
-             //   for (int y = 0; y < InputImage.Size.Height; y++)
-              //  {
-               //     imageValues[x, y] *= 10;
-               // }
+            //   for (int y = 0; y < InputImage.Size.Height; y++)
+            //  {
+            //     imageValues[x, y] *= 10;
+            // }
             //}
 
             //imageValues = Erosion(imageValues, 1);
@@ -387,12 +351,11 @@ namespace INFOIBV
                 {
                     if (image[x, y] == 255 && objectImage[x, y] == 0)
                     {
-
                         foundObjects++;
-                        bla.Push(new Tuple<int, int>(x, y));
-                        while (bla.Count > 0)
+                        stack.Push(new Tuple<int, int>(x, y));
+                        while (stack.Count > 0)
                         {
-                            Tuple<int, int> coord = bla.Pop();
+                            Tuple<int, int> coord = stack.Pop();
                             FindWholeObject(image, ref objectImage, coord.Item1, coord.Item2, foundObjects);
                         }
 
@@ -406,21 +369,21 @@ namespace INFOIBV
         {
             objectImage[x, y] = objectNumber;
             if (x - 1 >= 0 && y - 1 >= 0 && y - 1 < InputImage.Size.Height && InputImage.Size.Width > x - 1 && image[x - 1, y - 1] == 255 && objectImage[x - 1, y - 1] == 0)
-                bla.Push(new Tuple<int, int>(x - 1, y - 1));
+                stack.Push(new Tuple<int, int>(x - 1, y - 1));
             if (x >= 0 && y - 1 >= 0 && y - 1 < InputImage.Size.Height && InputImage.Size.Width > x && image[x, y - 1] == 255 && objectImage[x, y - 1] == 0)
-                bla.Push(new Tuple<int, int>(x, y - 1));
+                stack.Push(new Tuple<int, int>(x, y - 1));
             if (InputImage.Size.Width > x + 1 && x + 1 >= 0 && y - 1 >= 0 && y - 1 < InputImage.Size.Height && image[x + 1, y - 1] == 255 && objectImage[x + 1, y] == 0)
-                bla.Push(new Tuple<int, int>(x + 1, y - 1));
+                stack.Push(new Tuple<int, int>(x + 1, y - 1));
             if (InputImage.Size.Width > x - 1 && x - 1 >= 0 && y >= 0 && y < InputImage.Size.Height && image[x - 1, y] == 255 && objectImage[x - 1, y] == 0)
-                bla.Push(new Tuple<int, int>(x - 1, y));
+                stack.Push(new Tuple<int, int>(x - 1, y));
             if (InputImage.Size.Width > x + 1 && x + 1 >= 0 && y >= 0 && y < InputImage.Size.Height && image[x + 1, y] == 255 && objectImage[x + 1, y] == 0)
-                bla.Push(new Tuple<int, int>(x + 1, y));
+                stack.Push(new Tuple<int, int>(x + 1, y));
             if (InputImage.Size.Width > x - 1 && x - 1 >= 0 && y + 1 >= 0 && y + 1 < InputImage.Size.Height && image[x - 1, y + 1] == 255 && objectImage[x - 1, y + 1] == 0)
-                bla.Push(new Tuple<int, int>(x - 1, y + 1));
+                stack.Push(new Tuple<int, int>(x - 1, y + 1));
             if (InputImage.Size.Width > x && x >= 0 && y + 1 >= 0 && y + 1 < InputImage.Size.Height && image[x, y + 1] == 255 && objectImage[x, y + 1] == 0)
-                bla.Push(new Tuple<int, int>(x, y + 1));
+                stack.Push(new Tuple<int, int>(x, y + 1));
             if (InputImage.Size.Width > x + 1 && x + 1 >= 0 && y + 1 >= 0 && y + 1 < InputImage.Size.Height && image[x + 1, y + 1] == 255 && objectImage[x + 1, y + 1] == 0)
-                bla.Push(new Tuple<int, int>(x + 1, y + 1));
+                stack.Push(new Tuple<int, int>(x + 1, y + 1));
         }
 
         bool Equals(int[,] image1, int[,] image2)
@@ -467,9 +430,9 @@ namespace INFOIBV
                     DistanceImage[x, y] = IntKernel.Min();
                 }
             }
-            for (int y = InputImage.Size.Height-1; y >=0; y--)
+            for (int y = InputImage.Size.Height - 1; y >= 0; y--)
             {
-                for (int x = InputImage.Size.Width-1; x >=0; x--)
+                for (int x = InputImage.Size.Width - 1; x >= 0; x--)
                 {
                     List<int> IntKernel = new List<int>();
                     if (x - 1 >= 0 && y + 1 < InputImage.Size.Height)
@@ -486,87 +449,178 @@ namespace INFOIBV
             }
             return DistanceImage;
         }
-    }
 
-    class PriorityQueue
-    {
-        List<Tuple<int, int, int>> heap;
-        int size;
-
-        public PriorityQueue()
+        int[,] Invert(int[,] image)
         {
-            heap = new List<Tuple<int, int, int>>();
-        }
+            int[,] newImage = new int[InputImage.Size.Width, InputImage.Size.Height];
 
-        public void Add(int x, int y , int grayValue)
-        {
-            Tuple<int, int, int> newValue = new Tuple<int, int, int>(x, y, grayValue);
-
-            heap.Add(newValue);
-            size++;
-
-            int currentPlace = size - 1;
-
-            while(heap[Parent(currentPlace)].Item3 > heap[currentPlace].Item3 && currentPlace != 0)
+            for (int y = InputImage.Size.Height - 1; y >= 0; y--)
             {
-                Tuple<int, int, int> temp = heap[Parent(currentPlace)];
-                heap[Parent(currentPlace)] = heap[currentPlace];
-                heap[currentPlace] = temp;
-                currentPlace = Parent(currentPlace);
+                for (int x = InputImage.Size.Width - 1; x >= 0; x--)
+                {
+                    newImage[x, y] = 255 - image[x, y];
+                }
             }
+            return newImage;
         }
 
-        public Tuple<int, int, int> ExtractMin()
+        int[,] WaterShed(int[,] image)
         {
-            Tuple<int, int, int> min;
+            int[,] watershedLine = new int[InputImage.Size.Width, InputImage.Size.Height];
+            int[,] localMinima = new int[InputImage.Size.Width, InputImage.Size.Height];
+            int[,] erosion = Erosion(image, 5);
+            for (int y = InputImage.Size.Height - 1; y >= 0; y--)
+            {
+                for (int x = InputImage.Size.Width - 1; x >= 0; x--)
+                {
+                    bool lower = false;
+                    for (int sx = -1; sx <= 1; sx++)
+                    {
+                        for (int sy = -1; sy <= 1; sy++)
+                        {
+                            if (x + sx > 0 && x + sx < image.GetLength(0) && y + sy > 0 && y + sy < image.GetLength(1) && image[x, y] < image[sx + x, sy + y])
+                            {
+                                lower = true;
+                            }
+                        }
 
-            if (size > 0)
-                min = heap[0];
-            else
-                return null;
+                        if (erosion[x, y] == image[x, y] && lower)
+                        {
+                            localMinima[x, y] = 255;
+                        }
+                    }
+                }
+            }
 
-            Tuple<int, int, int> last = heap[size - 1];
-            size--;
-            heap[0] = last;
-            int currentPlace =0;
+            int[,] labeledMinima = FindObjects(localMinima);
+
+            PriorityQueue q = new PriorityQueue();
+            for (int y = InputImage.Size.Height - 1; y >= 0; y--)
+            {
+                for (int x = InputImage.Size.Width - 1; x >= 0; x--)
+                {
+                    if (labeledMinima[x, y] > 0)
+                        q.Add(x, y, image[x, y], labeledMinima[x, y]);
+                }
+            }
+
+            Tuple<int, int, int, int> min = q.ExtractMin();
             
-            while(Left(currentPlace)<=size)
+            while(min!= null)
             {
-                int smallest = currentPlace;
+                int x = min.Item1;
+                int y = min.Item2;
 
-                if(heap[Left(currentPlace)].Item3 < heap[smallest].Item3)
+                for (int sx = -1; sx <= 1; sx++)
                 {
-                    smallest = Left(currentPlace);
+                    for (int sy = -1; sy <= 1; sy++)
+                    {
+                        if (x + sx > 0 && x + sx < image.GetLength(0) && y + sy > 0 && y + sy < image.GetLength(1))
+                        {
+                            if(labeledMinima[x+sx,y+sy] == 0 && image[x+sx,y+sy] != 255)
+                            {
+                                labeledMinima[x + sx, y + sy] = min.Item4;
+                                q.Add(x + sx,y + sy,image[x,y],labeledMinima[x,y]);
+                            }
+                            else
+                            {
+                                if (labeledMinima[x + sx, y + sy] != labeledMinima[x, y] && labeledMinima[x+sx,y+sy] != 0)
+                                    watershedLine[x + sx, y + sy] = 255;
+                            }
+                        }
+                    }
                 }
-                if(Right(currentPlace) <= size && heap[Right(currentPlace)].Item3 < heap[smallest].Item3)
-                {
-                    smallest = Right(currentPlace);
-                }
-
-                if (currentPlace == smallest)
-                    break;
-
-                Tuple<int, int, int> temp = heap[currentPlace];
-                heap[currentPlace] = heap[smallest];
-                heap[smallest] = temp;                
-                currentPlace = smallest;                
+                min = q.ExtractMin();
             }
-            return min;
+            
+            return watershedLine;
         }
 
-        private int Left(int i)
+        class PriorityQueue
         {
-            return i * 2 + 1;
-        }
+            List<Tuple<int, int, int,int>> heap;
+            int size;
 
-        private int Right(int i)
-        {
-            return i * 2 + 2;
-        }
+            public PriorityQueue()
+            {
+                heap = new List<Tuple<int, int, int, int>>();
+            }
 
-        private int Parent(int i)
-        {
-            return (i-1) / 2;
+            public void Add(int x, int y, int grayValue, int label)
+            {
+                Tuple<int, int, int, int> newValue = new Tuple<int, int, int, int>(x, y, grayValue, label);
+
+                if (size >= heap.Count)
+                    heap.Add(newValue);
+                else
+                    heap[size] = newValue;
+
+                size++;
+
+                int currentPlace = size - 1;
+
+                while (heap[Parent(currentPlace)].Item3 > heap[currentPlace].Item3 && currentPlace != 0)
+                {
+                    Tuple<int, int, int, int> temp = heap[Parent(currentPlace)];
+                    heap[Parent(currentPlace)] = heap[currentPlace];
+                    heap[currentPlace] = temp;
+                    currentPlace = Parent(currentPlace);
+                }
+            }
+
+            public Tuple<int, int, int, int> ExtractMin()
+            {
+                Tuple<int, int, int, int> min;
+
+                if (size > 0)
+                    min = heap[0];
+                else
+                    return null;
+
+                Tuple<int, int, int, int> last = heap[size - 1];
+                size--;
+                heap[0] = last;
+                int currentPlace = 0;
+
+                while (Left(currentPlace) <= size)
+                {
+                    int smallest = currentPlace;
+
+                    if (heap[Left(currentPlace)].Item3 < heap[smallest].Item3)
+                    {
+                        smallest = Left(currentPlace);
+                    }
+                    if (Right(currentPlace) <= size && heap[Right(currentPlace)].Item3 < heap[smallest].Item3)
+                    {
+                        smallest = Right(currentPlace);
+                    }
+
+                    if (currentPlace == smallest)
+                        break;
+
+                    Tuple<int, int, int, int> temp = heap[currentPlace];
+                    heap[currentPlace] = heap[smallest];
+                    heap[smallest] = temp;
+                    currentPlace = smallest;
+                }
+                return min;
+            }
+
+            private int Left(int i)
+            {
+                return i * 2 + 1;
+            }
+
+            private int Right(int i)
+            {
+                return i * 2 + 2;
+            }
+
+            private int Parent(int i)
+            {
+                return (i - 1) / 2;
+            }
         }
     }
+
 }
