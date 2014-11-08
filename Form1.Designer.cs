@@ -32,7 +32,9 @@
             this.openImageDialog = new System.Windows.Forms.OpenFileDialog();
             this.imageFileName = new System.Windows.Forms.TextBox();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.applyButton = new System.Windows.Forms.Button();
+            this.applyButtonCircle = new System.Windows.Forms.Button();
+            this.applyButtonSquare = new System.Windows.Forms.Button();
+            this.applyButtonPawn = new System.Windows.Forms.Button();
             this.saveImageDialog = new System.Windows.Forms.SaveFileDialog();
             this.saveButton = new System.Windows.Forms.Button();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
@@ -73,16 +75,37 @@
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBox1.TabIndex = 2;
             this.pictureBox1.TabStop = false;
+            //
+            // ApplyButtonCircle
+            //
+            this.applyButtonCircle.Location = new System.Drawing.Point(590, 12);
+            this.applyButtonCircle.Name = "Circle";
+            this.applyButtonCircle.Size = new System.Drawing.Size(60, 23);
+            this.applyButtonCircle.TabIndex = 3;
+            this.applyButtonCircle.Text = "Circle";
+            this.applyButtonCircle.UseVisualStyleBackColor = true;
+            this.applyButtonCircle.Click += new System.EventHandler(this.applyButton_Click);
+            //
+            // ApplyButtonSquare
+            //
+            this.applyButtonSquare.Location = new System.Drawing.Point(520, 12);
+            this.applyButtonSquare.Name = "Square";
+            this.applyButtonSquare.Size = new System.Drawing.Size(60, 23);
+            this.applyButtonSquare.TabIndex = 3;
+            this.applyButtonSquare.Text = "Square";
+            this.applyButtonSquare.UseVisualStyleBackColor = true;
+            this.applyButtonSquare.Click += new System.EventHandler(this.applyButton_Click);
             // 
-            // applyButton
+            // applyButtonPawn
             // 
-            this.applyButton.Location = new System.Drawing.Point(478, 12);
-            this.applyButton.Name = "applyButton";
-            this.applyButton.Size = new System.Drawing.Size(103, 23);
-            this.applyButton.TabIndex = 3;
-            this.applyButton.Text = "Apply";
-            this.applyButton.UseVisualStyleBackColor = true;
-            this.applyButton.Click += new System.EventHandler(this.applyButton_Click);
+            this.applyButtonPawn.Location = new System.Drawing.Point(450, 12);
+            this.applyButtonPawn.Name = "Pawn";
+            this.applyButtonPawn.Size = new System.Drawing.Size(60, 23);
+            this.applyButtonPawn.TabIndex = 3;
+            this.applyButtonPawn.Text = "Pawn";
+            this.applyButtonPawn.UseVisualStyleBackColor = true;
+            this.applyButtonPawn.Click += new System.EventHandler(this.applyButton_Click);
+
             // 
             // saveImageDialog
             // 
@@ -110,7 +133,7 @@
             // 
             // progressBar
             // 
-            this.progressBar.Location = new System.Drawing.Point(587, 14);
+            this.progressBar.Location = new System.Drawing.Point(660, 14);
             this.progressBar.Name = "progressBar";
             this.progressBar.Size = new System.Drawing.Size(276, 20);
             this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
@@ -125,10 +148,12 @@
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.pictureBox2);
             this.Controls.Add(this.saveButton);
-            this.Controls.Add(this.applyButton);
+            this.Controls.Add(this.applyButtonPawn);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.imageFileName);
             this.Controls.Add(this.LoadImageButton);
+            this.Controls.Add(this.applyButtonCircle);
+            this.Controls.Add(this.applyButtonSquare);
             this.Location = new System.Drawing.Point(10, 10);
             this.Name = "INFOIBV";
             this.ShowIcon = false;
@@ -146,7 +171,9 @@
         private System.Windows.Forms.OpenFileDialog openImageDialog;
         private System.Windows.Forms.TextBox imageFileName;
         private System.Windows.Forms.PictureBox pictureBox1;
-        private System.Windows.Forms.Button applyButton;
+        private System.Windows.Forms.Button applyButtonPawn;
+        private System.Windows.Forms.Button applyButtonCircle;
+        private System.Windows.Forms.Button applyButtonSquare;
         private System.Windows.Forms.SaveFileDialog saveImageDialog;
         private System.Windows.Forms.Button saveButton;
         private System.Windows.Forms.PictureBox pictureBox2;
@@ -154,4 +181,3 @@
 
     }
 }
-

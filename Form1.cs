@@ -64,59 +64,53 @@ namespace INFOIBV
             //==========================================================================================
             // TODO: include here your own code
             int[,] imageValues = FilterWhite(Image, 35);
-            imageValues = Erosion(imageValues, 1);
+            
+            imageValues = Opening(imageValues, 1);
             imageValues = Closing(imageValues, 4);
-            int[,] white = imageValues;
-            //int[,] imageValues = ToGrayscale(Image);
-            //int[,] gray = ToGrayscale(Image);
-            //int[,] erosionImage = Erosion(gray, 1);
-            //int[,] dilationImage = Dilation(gray, 1);
 
-           
-            //int[,] imageValues = SubtractImage(dilationImage, erosionImage);
-            //imageValues = Opening(imageValues, 2);
-            //imageValues = FindObjects(imageValues);
+            
+            int[,] white = imageValues;
+            
             imageValues = ObjectDistance(imageValues);
             imageValues = Invert(imageValues);
+            
             int[,]watershedLines = WaterShed(imageValues);
+            imageValues = watershedLines;
+            
             imageValues = SubtractImage(white, watershedLines);
-            //imageValues = Threshold(imageValues, 10);
-            //for (int x = 0; x < InputImage.Size.Width; x++)
-            //{
-            //   for (int y = 0; y < InputImage.Size.Height; y++)
-            //  {
-            //     imageValues[x, y] *= 10;
-            // }
-            //}
-
-            //imageValues = Erosion(imageValues, 1);
-            //imageValues = Dilation(imageValues,3);
-            //imageValues = Opening(imageValues, 5);
-            /*
-            imageValues = SubtractImage(dilation, erosion);
-
-            imageValues = Threshold(imageValues, 25);
-            int[,] thresholdCopy = imageValues;
-
-            //imageValues = Erosion(imageValues, 1);
-            imageValues = Erosion(imageValues, 2);
             
-            
-            int n = 120;
-            for (int i = 0; i < n; i++)
+            Tuple<int[,],Dictionary<int,int>> objectInfo = FindObjectsWithArea(imageValues);
+            int[,] distanceToBackgroundImage = ObjectDistance(objectInfo.Item1);
+            int[,] perimeters = CalculatePerimeters(distanceToBackgroundImage,objectInfo.Item1);            
+            Dictionary<int, List<Tuple<int, int>>> perimetersPerObject = GetPerimetersPerObject(perimeters);
+
+            Dictionary<int, ImageObject> objects = new Dictionary<int, ImageObject>();
+
+            foreach(int objectID in objectInfo.Item2.Keys)
             {
-               imageValues = Dilation(imageValues,1);
-               imageValues = AND(imageValues, thresholdCopy);
-            }*/
-            //int[,] circleimage = new int[InputImage.Size.Width, InputImage.Size.Height];
+                objects[objectID] = new ImageObject(objectInfo.Item2[objectID],perimetersPerObject[objectID],objectID);
+            }
 
-            //List<Tuple<int, int, int>> circles = FindCircles(imageValues, 90, 50, 100, 1, 0.7f);
-            //foreach(Tuple<int, int ,int> circle in circles)
-            //{
-            //    circleimage[circle.Item1, circle.Item2] = 255;
-            // }
-            //imageValues = circleimage;
-            //imageValues = Closing(imageValues, 2);
+            List<int> drawables = new List<int>();
+
+            foreach(ImageObject obj in objects.Values)
+            {
+                
+                if(obj.Variance < 1.5 && obj.Area > 1000)
+                {
+                    drawables.Add(obj.ID);
+                }
+
+                /*if(obj.Variance > 0 && obj.Area < 5000 && obj.Area > 1000)
+                {
+                    drawables.Add(obj.ID);
+                }*/
+            }
+            imageValues = FilterObjects(drawables, objectInfo.Item1);
+            imageValues = Threshold(imageValues, 1);
+            //imageValues = perimeters;
+            //imageValues = FindObjects(imageValues);*/
+            
 
             //==========================================================================================
 
@@ -345,6 +339,8 @@ namespace INFOIBV
         {
             int[,] objectImage = new int[InputImage.Size.Width, InputImage.Size.Height];
             int foundObjects = 0;
+            Dictionary<int, int> objectAreas = new Dictionary<int, int>();
+
             for (int x = 0; x < InputImage.Size.Width; x++)
             {
                 for (int y = 0; y < InputImage.Size.Height; y++)
@@ -353,37 +349,93 @@ namespace INFOIBV
                     {
                         foundObjects++;
                         stack.Push(new Tuple<int, int>(x, y));
+
                         while (stack.Count > 0)
                         {
                             Tuple<int, int> coord = stack.Pop();
                             FindWholeObject(image, ref objectImage, coord.Item1, coord.Item2, foundObjects);
                         }
-
                     }
                 }
             }
             return objectImage;
         }
 
-        void FindWholeObject(int[,] image, ref int[,] objectImage, int x, int y, int objectNumber)
+        Tuple<int[,], Dictionary<int, int>> FindObjectsWithArea(int[,] image)
+        {
+            int[,] objectImage = new int[InputImage.Size.Width, InputImage.Size.Height];
+            int foundObjects = 0;
+            Dictionary<int, int> objectAreas = new Dictionary<int, int>();
+
+            for (int x = 0; x < InputImage.Size.Width; x++)
+            {
+                for (int y = 0; y < InputImage.Size.Height; y++)
+                {
+                    if (image[x, y] == 255 && objectImage[x, y] == 0)
+                    {
+                        foundObjects++;
+                        stack.Push(new Tuple<int, int>(x, y));
+
+                        int area = 0;
+
+                        while (stack.Count > 0)
+                        {
+                            Tuple<int, int> coord = stack.Pop();
+                            area += FindWholeObject(image, ref objectImage, coord.Item1, coord.Item2, foundObjects);
+                        }
+                        objectAreas[foundObjects] = area;
+                    }
+                }
+            }
+            return new Tuple<int[,], Dictionary<int, int>>(objectImage, objectAreas);
+        }
+
+        int FindWholeObject(int[,] image, ref int[,] objectImage, int x, int y, int objectNumber)
         {
             objectImage[x, y] = objectNumber;
+            int newObjectPixels = 0;
             if (x - 1 >= 0 && y - 1 >= 0 && y - 1 < InputImage.Size.Height && InputImage.Size.Width > x - 1 && image[x - 1, y - 1] == 255 && objectImage[x - 1, y - 1] == 0)
+            {
                 stack.Push(new Tuple<int, int>(x - 1, y - 1));
+                newObjectPixels++;
+            }
             if (x >= 0 && y - 1 >= 0 && y - 1 < InputImage.Size.Height && InputImage.Size.Width > x && image[x, y - 1] == 255 && objectImage[x, y - 1] == 0)
+            {
                 stack.Push(new Tuple<int, int>(x, y - 1));
+                newObjectPixels++;
+            }
             if (InputImage.Size.Width > x + 1 && x + 1 >= 0 && y - 1 >= 0 && y - 1 < InputImage.Size.Height && image[x + 1, y - 1] == 255 && objectImage[x + 1, y] == 0)
+            {
                 stack.Push(new Tuple<int, int>(x + 1, y - 1));
+                newObjectPixels++;
+            }
             if (InputImage.Size.Width > x - 1 && x - 1 >= 0 && y >= 0 && y < InputImage.Size.Height && image[x - 1, y] == 255 && objectImage[x - 1, y] == 0)
+            {
                 stack.Push(new Tuple<int, int>(x - 1, y));
+                newObjectPixels++;
+            }
             if (InputImage.Size.Width > x + 1 && x + 1 >= 0 && y >= 0 && y < InputImage.Size.Height && image[x + 1, y] == 255 && objectImage[x + 1, y] == 0)
+            {
                 stack.Push(new Tuple<int, int>(x + 1, y));
+                newObjectPixels++;
+            }
             if (InputImage.Size.Width > x - 1 && x - 1 >= 0 && y + 1 >= 0 && y + 1 < InputImage.Size.Height && image[x - 1, y + 1] == 255 && objectImage[x - 1, y + 1] == 0)
+            {
                 stack.Push(new Tuple<int, int>(x - 1, y + 1));
+                newObjectPixels++;
+            }
             if (InputImage.Size.Width > x && x >= 0 && y + 1 >= 0 && y + 1 < InputImage.Size.Height && image[x, y + 1] == 255 && objectImage[x, y + 1] == 0)
+            {
                 stack.Push(new Tuple<int, int>(x, y + 1));
+                newObjectPixels++;
+            }
             if (InputImage.Size.Width > x + 1 && x + 1 >= 0 && y + 1 >= 0 && y + 1 < InputImage.Size.Height && image[x + 1, y + 1] == 255 && objectImage[x + 1, y + 1] == 0)
+            {
                 stack.Push(new Tuple<int, int>(x + 1, y + 1));
+                newObjectPixels++;
+            }
+
+            return newObjectPixels;
         }
 
         bool Equals(int[,] image1, int[,] image2)
@@ -407,7 +459,7 @@ namespace INFOIBV
             {
                 for (int y = 0; y < InputImage.Size.Height; y++)
                 {
-                    if (image[x, y] == 255)
+                    if (image[x, y] != 0)
                     {
                         DistanceImage[x, y] = int.MaxValue;
                     }
@@ -534,6 +586,57 @@ namespace INFOIBV
             }
             
             return watershedLine;
+        }
+
+        int[,] CalculatePerimeters(int[,] image, int[,] objectIDs)
+        {
+            int[,] perimeters = new int[InputImage.Size.Width, InputImage.Size.Height];
+            image = ObjectDistance(image);
+
+            for (int y = InputImage.Size.Height - 1; y >= 0; y--)
+            {
+                for (int x = InputImage.Size.Width - 1; x >= 0; x--)
+                {
+                    if (image[x, y] == 1)
+                        perimeters[x, y] = objectIDs[x,y];
+                }
+            }
+
+            return perimeters;
+        }
+
+        Dictionary<int,List<Tuple<int,int>>> GetPerimetersPerObject(int[,] perimeterImage)
+        {
+            Dictionary<int, List<Tuple<int, int>>> perimeters = new Dictionary<int, List<Tuple<int, int>>>();
+            for (int y = InputImage.Size.Height - 1; y >= 0; y--)
+            {
+                for (int x = InputImage.Size.Width - 1; x >= 0; x--)
+                {
+                    int value = perimeterImage[x,y];
+                    if(value != 0)
+                    {
+                        if (!perimeters.Keys.Contains(value))
+                            perimeters[value] = new List<Tuple<int, int>>();
+
+                        perimeters[value].Add(new Tuple<int, int>(x, y));
+                    }
+                }
+            }
+            return perimeters;
+        }
+
+        int[,] FilterObjects(List<int> drawables, int[,] image)
+        {
+            int[,] filteredImage = new int[InputImage.Size.Width, InputImage.Size.Height];
+            for (int y = InputImage.Size.Height - 1; y >= 0; y--)
+            {
+                for (int x = InputImage.Size.Width - 1; x >= 0; x--)
+                {
+                    if (drawables.Contains(image[x, y]))
+                        filteredImage[x, y] = image[x, y];
+                }
+            }
+            return filteredImage;
         }
 
         class PriorityQueue
